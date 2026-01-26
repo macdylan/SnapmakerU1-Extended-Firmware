@@ -49,13 +49,15 @@ add_string() {
 echo ">> Replacing logo.bmp in boot image"
 for i in "$UNPACK_DIR/resources/"*.bmp; do
   # align with the gui spinner
-  add_string "$i" "w/2-text_w/2" "h*220/320-ascent/2" 16 white "$PROFILE_STR"
+  #add_string "$i" "w/2-text_w/2" "h*220/320-ascent/2" 16 white "$PROFILE_STR"
+  ffmpeg -y -i "$i" -i "$ROOT_DIR/overlays/common/01-store-version/scripts/only-u1-can-do.jpg" -c:v bmp -filter_complex "overlay=(W-w)/2:(H-h)/2" "$i.new.bmp" && \
+  mv "$i.new.bmp" "$i"
 
   # align bottom left
-  add_string "$i" "w-text_w-10" "h-ascent-10" 12 white "$VERSION_STR"
+  add_string "$i" "w-text_w-12" "h-ascent-12" 14 white "$PROFILE_STR - $VERSION_STR"
 
   # align bottom right
-  add_string "$i" "10" "h-ascent-10" 12 white "$BUILD_DATE_STR"
+  #add_string "$i" "10" "h-ascent-10" 12 white "$BUILD_DATE_STR"
 done
 
 echo ">> Repacking boot.img"
