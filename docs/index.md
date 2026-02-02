@@ -4,7 +4,12 @@ title: Custom Snapmaker U1 Firmware
 
 # Custom Snapmaker U1 Firmware
 
+[![Latest Release](https://img.shields.io/github/v/release/paxx12/SnapmakerU1)](https://github.com/paxx12/SnapmakerU1/releases/latest)
+[![Pre-release](https://img.shields.io/github/v/release/paxx12/SnapmakerU1?include_prereleases&label=pre-release)](https://github.com/paxx12/SnapmakerU1/releases)
+
 Custom firmware for the Snapmaker U1 3D printer, enabling debug features like SSH access and adding additional capabilities.
+
+This is an independent project and is not affiliated with Snapmaker.
 
 > **Warning**: While installing custom firmware does not automatically void the product warranty, any damage caused by or attributable to the installation or use of custom firmware is not covered under warranty. Use at your own risk. See [Snapmaker Terms of Use](https://www.snapmaker.com/terms-of-use) for details.
 >
@@ -47,6 +52,7 @@ Heavily expanded firmware with extensive features and customization. Includes al
 - [Firmware Configuration](firmware_config.md) - Customize firmware behavior via web interface or config file
 - [Camera Support](camera_support.md) - Hardware-accelerated camera stack with WebRTC streaming for internal and USB cameras
 - [Klipper and Moonraker Custom Includes](klipper_includes.md) - Add custom configuration files via Fluidd/Mainsail
+- [Klipper Tweaks](tweaks.md) - Experimental TMC driver optimizations (firmware-config only)
 - [RFID Filament Tag Support](rfid_support.md) - NTAG213/215/216 support for OpenSpool format
 - [Remote Screen](remote_screen.md) - View and control printer screen remotely via web browser
 - [Monitoring](monitoring.md) - Integration with Prometheus, Home Assistant, DataDog, and other monitoring systems

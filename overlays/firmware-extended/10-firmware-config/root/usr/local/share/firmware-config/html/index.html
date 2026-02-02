@@ -71,13 +71,28 @@
         @keyframes indeterminate { 0% { transform: translateX(-100%); } 100% { transform: translateX(400%); } }
         .progress-info { display: none; color: #aaa; font-size: 12px; margin-bottom: 12px; justify-content: space-between; }
         .progress-info.visible { display: flex; }
+        .notice { display: none; background: var(--warning); color: #000; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
+        .notice.visible { display: block; }
+        .notice a { color: #000; font-weight: 600; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Firmware Config <button class="btn btn-primary" onclick="refreshAll()">&#x21bb; Refresh</button></h1>
 
-        <div id="status-container"></div>
+        <div id="service-notice" class="notice">
+            Service unavailable. Ensure <strong>Advanced Mode</strong> is enabled, then restart the printer. <a href="https://github.com/paxx12/SnapmakerU1-Extended-Firmware/blob/main/docs/firmware_config.md" target="_blank">View docs</a>
+        </div>
+
+        <div id="auth-notice" class="notice">
+            Authentication required. Please <a href="/">log in to Fluidd</a> first, then return to this page.
+        </div>
+
+        <div id="main-content">
+        <div class="card">
+            <div class="card-header"><span class="card-title">Status</span></div>
+            <div id="status-container" class="info-grid"><div class="loading"><span class="spinner"></span> Loading...</div></div>
+        </div>
 
         <div class="card">
             <div class="card-header"><span class="card-title">Quick Links</span></div>
@@ -106,6 +121,7 @@
                 <input type="text" class="input" id="file-display" placeholder="Click to select or drag & drop file" readonly onclick="$('file-input').click()">
                 <button class="btn btn-warning" id="upload-btn" disabled onclick="uploadUpgrade()">Upload & Upgrade</button>
             </div>
+        </div>
         </div>
     </div>
 
@@ -140,10 +156,57 @@
         // Helper function to get element by ID
         const $ = id => document.getElementById(id);
 
+        // Auth functions for Moonraker/Fluidd token
+        function getJWT() {
+            const instanceKey = `user-token-${window.location.host.replace(/[^a-zA-Z0-9]/g, '_')}`;
+            let token = localStorage.getItem(instanceKey);
+            if (token) return token;
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('user-token-')) {
+                    token = localStorage.getItem(key);
+                    if (token) return token;
+                }
+            }
+            return null;
+        }
+
+        function getAuthHeaders() {
+            const jwt = getJWT();
+            return jwt ? { 'Authorization': `Bearer ${jwt}` } : {};
+        }
+
         // Global state
         let selectedFile = null;
         let actionsData = [];
         let currentAction = '';
+
+        function showServiceNotice() {
+            $('service-notice').classList.add('visible');
+        }
+
+        function showAuthNotice() {
+            $('auth-notice').classList.add('visible');
+        }
+
+        function hideNotices() {
+            $('service-notice').classList.remove('visible');
+            $('auth-notice').classList.remove('visible');
+        }
+
+        async function apiFetch(url, options = {}) {
+            options.headers = { ...getAuthHeaders(), ...options.headers };
+            const resp = await fetch(url, options);
+            hideNotices();
+            if (resp.status === 401) {
+                showAuthNotice();
+                throw new Error('Authentication required');
+            } else if (resp.status === 502) {
+                showServiceNotice();
+                throw new Error('Service unavailable');
+            }
+            return resp;
+        }
 
         // ========================================
         // Data Loading Functions
@@ -152,9 +215,9 @@
         async function loadStatus() {
             const container = $('status-container');
             try {
-                const status = await (await fetch('api/status')).json();
+                const status = await (await apiFetch('api/status')).json();
 
-                const sectionsHtml = Object.entries(status).map(([key, section]) => {
+                container.innerHTML = Object.entries(status).map(([key, section]) => {
                     const itemsHtml = section.items.map(item =>
                         `<div><strong>${item.label}:</strong> ${item.value || 'N/A'}</div>`
                     ).join('');
@@ -163,20 +226,15 @@
                         <div class="info-value" style="font-size:13px;line-height:1.6">${itemsHtml}</div>
                     </div>`;
                 }).join('');
-
-                container.innerHTML = `<div class="card">
-                    <div class="card-header"><span class="card-title">Status</span></div>
-                    <div class="info-grid">${sectionsHtml}</div>
-                </div>`;
             } catch (e) {
-                container.innerHTML = '<div class="card"><div class="loading" style="color:var(--error)">Failed to load status</div></div>';
+                container.innerHTML = `<div class="loading" style="color:var(--error)">Error: ${e.message}</div>`;
             }
         }
 
         async function loadLinks() {
             const container = $('links-container');
             try {
-                const links = await (await fetch('api/links')).json();
+                const links = await (await apiFetch('api/links')).json();
 
                 container.innerHTML = links.map(link =>
                     `<a class="link-item" href="${link.url}" target="_blank">
@@ -192,7 +250,7 @@
         async function loadActions() {
             const container = $('actions-container');
             try {
-                const grouped = await (await fetch('api/actions')).json();
+                const grouped = await (await apiFetch('api/actions')).json();
                 actionsData = Object.values(grouped).flatMap(g => g.items);
 
                 container.innerHTML = Object.entries(grouped).map(([_, group]) =>
@@ -215,7 +273,7 @@
             const container = $('settings-container');
             const card = container.closest('.card');
             try {
-                const grouped = await (await fetch('api/settings')).json();
+                const grouped = await (await apiFetch('api/settings')).json();
                 const groups = Object.entries(grouped);
 
                 if (groups.length === 0) {
@@ -228,12 +286,12 @@
                     `<div class="group-section">
                         <div class="group-title">${group.label}</div>
                         ${group.items.map(setting => {
-                            const options = Object.entries(setting.options).map(([optKey, optLabel]) =>
-                                `<option value="${optKey}"${optKey === setting.current ? ' selected' : ''}>${optLabel}</option>`
-                            ).join('');
+                            const options = Object.entries(setting.options).map(([optKey, optVal]) => {
+                                return `<option value="${optKey}" data-label="${encodeURIComponent(optVal.label)}" data-confirm="${encodeURIComponent(optVal.confirm || '')}"${optKey === setting.current ? ' selected' : ''}>${optVal.label}</option>`;
+                            }).join('');
                             return `<div class="row">
                                 <span class="row-label">${setting.label}</span>
-                                <select onchange="updateSetting('${setting.id}', '${setting.label}', this.value)">${options}</select>
+                                <select data-prev-value="${setting.current}" onchange="updateSetting('${setting.id}', '${setting.label}', this)">${options}</select>
                             </div>`;
                         }).join('')}
                     </div>`
@@ -294,15 +352,22 @@
         // Modal Functions
         // ========================================
 
-        function showConfirmModal(title, message, onConfirm) {
+        let confirmOnCancel = null;
+
+        function showConfirmModal(title, message, onConfirm, onCancel) {
             $('confirm-title').textContent = title;
             $('confirm-message').textContent = message;
             $('confirm-btn').onclick = () => { hideConfirmModal(); onConfirm(); };
+            confirmOnCancel = onCancel || null;
             $('confirm-modal').classList.add('visible');
         }
 
         function hideConfirmModal() {
             $('confirm-modal').classList.remove('visible');
+            if (confirmOnCancel) {
+                confirmOnCancel();
+                confirmOnCancel = null;
+            }
         }
 
         function showActionModal(title, message) {
@@ -363,7 +428,7 @@
             $('action-log').classList.add('visible');
 
             try {
-                const resp = await fetch('api/upgrade/url', {
+                const resp = await apiFetch('api/upgrade/url', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url })
@@ -409,6 +474,8 @@
             const startTime = performance.now();
 
             xhr.open('POST', 'api/upgrade/upload');
+            const jwt = getJWT();
+            if (jwt) xhr.setRequestHeader('Authorization', `Bearer ${jwt}`);
 
             xhr.upload.onprogress = (e) => {
                 if (e.lengthComputable) {
@@ -499,7 +566,7 @@
 
         async function execAction(id) {
             try {
-                const resp = await fetch(`api/action/${id}`, { method: 'POST' });
+                const resp = await apiFetch(`api/action/${id}`, { method: 'POST' });
                 await streamResponse(resp, id);
             } catch (e) {
                 appendLog(`\nERROR: ${e.message}`);
@@ -550,10 +617,22 @@
         // Settings Functions
         // ========================================
 
-        function updateSetting(key, label, value) {
-            const message = `Change ${label} to "${value}"?\n\n⚠️ Warning: Changing settings will restart services and may interrupt printing.`;
+        function updateSetting(key, label, selectEl) {
+            const value = selectEl.value;
+            const prevValue = selectEl.dataset.prevValue || value;
+            const selectedOption = selectEl.selectedOptions[0];
+            const optLabel = decodeURIComponent(selectedOption.dataset.label || value);
+            const confirmMsg = decodeURIComponent(selectedOption.dataset.confirm || '');
 
-            showConfirmModal(`Update ${label}`, message, () => doUpdateSetting(key, value));
+            const message = confirmMsg || `Change ${label} to "${optLabel}"?`;
+            const warning = '⚠️ Warning: Changing settings will restart services and may interrupt printing.';
+
+            showConfirmModal(
+                `Update ${label}`,
+                `${message}\n\n${warning}`,
+                () => { selectEl.dataset.prevValue = value; doUpdateSetting(key, value); },
+                () => { selectEl.value = prevValue; }
+            );
         }
 
         async function doUpdateSetting(key, value) {
@@ -561,7 +640,7 @@
             $('action-log').classList.add('visible');
 
             try {
-                const resp = await fetch(`api/settings/${key}/${value}`, { method: 'POST' });
+                const resp = await apiFetch(`api/settings/${key}/${value}`, { method: 'POST' });
                 await streamResponse(resp);
                 refreshAll();
             } catch (e) {
@@ -578,7 +657,7 @@
             if (!currentAction) return;
 
             try {
-                const resp = await fetch(`api/action/${currentAction}/download`, { method: 'POST' });
+                const resp = await apiFetch(`api/action/${currentAction}/download`, { method: 'POST' });
                 if (!resp.ok) throw new Error(resp.statusText);
 
                 const blob = await resp.blob();
