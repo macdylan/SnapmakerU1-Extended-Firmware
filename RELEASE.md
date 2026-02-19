@@ -4,9 +4,13 @@
 >
 > Custom firmware is intended for users with appropriate technical knowledge. Ensure you understand the implications before proceeding.
 
-## Upgrading to v1.1.0
+## New Features and Key Changes
 
-The configuration file has been renamed from `extended.cfg` to `extended2.cfg`. During the first boot after upgrading a new `extended2.cfg` will be created with default settings. You will need to migrate your custom settings from `extended.cfg` to `extended2.cfg` manually or use `http://IP/firmware-config`.
+- TBD
+
+## Heroes of this release
+
+- TBD
 
 ## Install
 
@@ -20,7 +24,9 @@ Quick steps:
 
 ## Troubleshooting
 
+- **Configuration change**: Since the `v1.1.0` all features has to be configured with http://IP/firmware-config.
 - **Klipper failed to start**: Open Firmware Config at `http://IP/firmware-config`, go to `Recovery` and select `Reset Extended to Defaults`. This will reset all extended settings and reboot the printer.
+- **AFC-Lite Stub**: Has number of [limitations](http://snapmakeru1-extended-firmware.pages.dev/afc-lite#limitations).
 
 ## Revert
 
@@ -35,7 +41,7 @@ Join the [Snapmaker Discord](https://discord.com/invite/snapmaker-official-10865
 
 If you find this project useful and would like to support its development, you can:
 
-[![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://buymeacoffee.com/paxx12)
+[![Ko-Fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/paxx12)
 
 🖨️ **Buy a Snapmaker Printer from Official Store** - use referral link and discount code `PAXX12` to get 5% discount on any purchase
 
