@@ -1,0 +1,47 @@
+--- rootfs.original/home/lava/klipper/klippy/extras/filament_detect.py
++++ rootfs/home/lava/klipper/klippy/extras/filament_detect.py
+@@ -45,6 +45,7 @@
+         gcode.register_command('FILAMENT_DT_UPDATE', self.cmd_FILAMENT_DT_UPDATE)
+         gcode.register_command('FILAMENT_DT_CLEAR', self.cmd_FILAMENT_DT_CLEAR)
+         gcode.register_command('FILAMENT_DT_SELF_TEST', self.cmd_FILAMENT_DT_SELF_TEST)
++        gcode.register_command('FILAMENT_DT_SET', self.cmd_FILAMENT_DT_SET)
+         gcode.register_command('FILAMENT_DT_STARTUP_STAY', self.cmd_FILAMENT_DT_STARTUP_STAY)
+ 
+         self.printer.register_event_handler("klippy:ready", self._ready)
+@@ -220,6 +221,31 @@
+ 
+         self.request_clear_filament_info(channel)
+ 
++    def cmd_FILAMENT_DT_SET(self, gcmd):
++        channel = gcmd.get_int('CHANNEL', None)
++
++        if (channel is None):
++            raise gcmd.error("CHANNEL must be specified!")
++
++        if (channel < 0 or channel >= self._channel_nums):
++            msg = ("channel[%d] is out of range[0, %d]" % (channel, self._channel_nums - 1))
++            raise gcmd.error(msg)
++
++        params = gcmd.get_command_parameters()
++        if 'CHANNEL' in params:
++            params = dict(params)
++            params.pop('CHANNEL', None)
++
++        filament_info = copy.deepcopy(filament_protocol.FILAMENT_INFO_STRUCT)
++        for key, default_value in filament_protocol.FILAMENT_INFO_STRUCT.items():
++            if key in params:
++                if type(params[key]) is not type(default_value):
++                    raise gcmd.error("invalid type for %s: %s" % (key, params[key]))
++                filament_info[key] = params[key]
++
++        self._state[channel] = FILAMENT_DT_STATE_IDLE
++        self._filament_info_update(channel, filament_info, True)
++
+     def cmd_FILAMENT_DT_SELF_TEST(self, gcmd):
+         channel = gcmd.get_int('CHANNEL', None)
+         times = gcmd.get_int('TIMES', 100)
+@@ -285,4 +311,3 @@
+ 
+ def load_config(config):
+     return FilamentDetector(config)
+-
