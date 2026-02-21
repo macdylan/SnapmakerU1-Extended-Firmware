@@ -8,7 +8,7 @@
          gcode.register_command('FILAMENT_DT_STARTUP_STAY', self.cmd_FILAMENT_DT_STARTUP_STAY)
  
          self.printer.register_event_handler("klippy:ready", self._ready)
-@@ -220,6 +221,31 @@
+@@ -220,6 +221,52 @@
  
          self.request_clear_filament_info(channel)
  
@@ -22,17 +22,38 @@
 +            msg = ("channel[%d] is out of range[0, %d]" % (channel, self._channel_nums - 1))
 +            raise gcmd.error(msg)
 +
-+        params = gcmd.get_command_parameters()
-+        if 'CHANNEL' in params:
-+            params = dict(params)
-+            params.pop('CHANNEL', None)
++        params = dict(gcmd.get_command_parameters())
++        params.pop('CHANNEL', None)
 +
 +        filament_info = copy.deepcopy(filament_protocol.FILAMENT_INFO_STRUCT)
-+        for key, default_value in filament_protocol.FILAMENT_INFO_STRUCT.items():
-+            if key in params:
-+                if type(params[key]) is not type(default_value):
-+                    raise gcmd.error("invalid type for %s: %s" % (key, params[key]))
-+                filament_info[key] = params[key]
++
++        if 'VENDOR' in params:
++            filament_info['VENDOR'] = str(params.pop('VENDOR'))
++        if 'TYPE' in params:
++            filament_info['MAIN_TYPE'] = str(params.pop('TYPE'))
++        if 'SUBTYPE' in params:
++            filament_info['SUB_TYPE'] = str(params.pop('SUBTYPE'))
++
++        if 'MIN_TEMP' in params:
++            filament_info['HOTEND_MIN_TEMP'] = int(params.pop('MIN_TEMP'))
++        if 'MAX_TEMP' in params:
++            filament_info['HOTEND_MAX_TEMP'] = int(params.pop('MAX_TEMP'))
++        if 'BED_TEMP' in params:
++            filament_info['BED_TEMP'] = int(params.pop('BED_TEMP'))
++
++        if 'ALPHA' in params:
++            alpha = str(params.pop('ALPHA')).strip()
++            filament_info['ALPHA'] = int(alpha, 16) & 0xFF
++        if 'COLOR' in params:
++            color = str(params.pop('COLOR')).strip()
++            filament_info['RGB_1'] = int(color, 16) & 0xFFFFFF
++        filament_info['ARGB_COLOR'] = filament_info['ALPHA'] << 24 | filament_info['RGB_1']
++
++        if 'CARD_UID' in params:
++            filament_info['CARD_UID'] = list(bytes.fromhex(str(params.pop('CARD_UID'))))
++
++        if params:
++            raise gcmd.error("unsupported fields: %s" % (', '.join(sorted(params.keys()))))
 +
 +        self._state[channel] = FILAMENT_DT_STATE_IDLE
 +        self._filament_info_update(channel, filament_info, True)
@@ -40,8 +61,3 @@
      def cmd_FILAMENT_DT_SELF_TEST(self, gcmd):
          channel = gcmd.get_int('CHANNEL', None)
          times = gcmd.get_int('TIMES', 100)
-@@ -285,4 +311,3 @@
- 
- def load_config(config):
-     return FilamentDetector(config)
--
