@@ -10,7 +10,7 @@
      def _ready(self):
          self.filament_feed_objects = self.printer.lookup_objects('filament_feed')
          self._fm175xx_reader = self.printer.lookup_object('fm175xx_reader')
-@@ -173,6 +176,54 @@
+@@ -173,6 +176,59 @@
  
          return error, info
  
@@ -51,10 +51,15 @@
 +
 +            if 'card_uid' in params:
 +                filament_info['CARD_UID'] = list(bytes.fromhex(str(params.pop('card_uid'))))
++            if 'sku' in params:
++                filament_info['sku'] = int(params.pop('sku'))
++            elif len(params) > 0:
++                filament_info['sku'] = rand()
 +
 +            if params:
 +                raise web_request.error("unsupported fields: %s" % (', '.join(sorted(params.keys()))))
 +
++            info['OFFICIAL'] = len(params) > 0
 +            self._state[channel] = FILAMENT_DT_STATE_IDLE
 +            self._filament_info_update(channel, filament_info, True)
 +            web_request.send({'state': 'success'})
