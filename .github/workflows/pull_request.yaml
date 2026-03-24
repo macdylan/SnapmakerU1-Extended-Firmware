@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - develop
+      - tmp
     paths-ignore:
       - '*.md'
       - .github/workflows/*.yaml
