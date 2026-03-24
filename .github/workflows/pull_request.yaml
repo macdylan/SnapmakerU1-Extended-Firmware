@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - develop
-      - tmp
     paths-ignore:
       - '*.md'
       - .github/workflows/*.yaml
@@ -95,60 +94,42 @@ jobs:
     - name: Download firmware
       run: ./dev.sh make firmware
 
-#    - name: Build with Basic firmware
-#      run: ./dev.sh make build PROFILE=basic OUTPUT_FILE=U1_basic_${{ env.GIT_VERSION }}_upgrade.bin
-
     - name: Build with Extended Fluidd firmware
       run: ./dev.sh make build PROFILE=extended OUTPUT_FILE=U1_extended_${{ env.GIT_VERSION }}_upgrade.bin
 
-#    - name: Build DEVEL version of Basic firmware
-#      run: ./dev.sh make build PROFILE=basic-devel OUTPUT_FILE=U1_basic_${{ env.GIT_VERSION }}_devel.bin
-
-#    - name: Build DEVEL version of Extended Fluidd firmware
-#      run: ./dev.sh make build PROFILE=extended-devel OUTPUT_FILE=U1_extended_${{ env.GIT_VERSION }}_devel.bin
-
-#    - uses: actions/upload-artifact@v4
-#      with:
-#        name: basic-build
-#        path: U1_basic_*_upgrade.bin
+    - name: Build DEVEL version of Extended Fluidd firmware
+      run: ./dev.sh make build PROFILE=extended-devel OUTPUT_FILE=U1_extended_${{ env.GIT_VERSION }}_devel.bin
 
     - uses: actions/upload-artifact@v4
       with:
         name: extended-build
         path: U1_extended_*_upgrade.bin
 
-#    - uses: actions/upload-artifact@v4
-#      with:
-#        name: basic-devel-build
-#        path: U1_basic_*_devel.bin
-#
-#    - uses: actions/upload-artifact@v4
-#      with:
-#        name: extended-devel-build
-#        path: U1_extended_*_devel.bin
-#
-#    - name: Save PR info
-#      if: github.event_name == 'pull_request'
-#      run: |
-#        mkdir -p pr-info
-#        echo "${{ github.event.pull_request.number }}" > pr-info/number
-#        echo "${{ github.event.pull_request.head.sha }}" > pr-info/head_sha
-#        echo "${{ github.sha }}" > pr-info/merge_sha
-#        echo "${{ github.base_ref }}" > pr-info/base_ref
-#        echo "${{ env.GIT_VERSION }}" > pr-info/version
-#        echo "${{ env.JOB_START }}" > pr-info/job_start
-#        echo "$(date +%s)" > pr-info/job_end
-#        echo basic-build >> pr-info/artifacts
-#        echo extended-build >> pr-info/artifacts
-#        echo basic-devel-build >> pr-info/artifacts
-#        echo extended-devel-build >> pr-info/artifacts
-#
-#    - name: Upload PR info
-#      if: github.event_name == 'pull_request'
-#      uses: actions/upload-artifact@v4
-#      with:
-#        name: pr-info
-#        path: pr-info/
+    - uses: actions/upload-artifact@v4
+      with:
+        name: extended-devel-build
+        path: U1_extended_*_devel.bin
+
+    - name: Save PR info
+      if: github.event_name == 'pull_request'
+      run: |
+        mkdir -p pr-info
+        echo "${{ github.event.pull_request.number }}" > pr-info/number
+        echo "${{ github.event.pull_request.head.sha }}" > pr-info/head_sha
+        echo "${{ github.sha }}" > pr-info/merge_sha
+        echo "${{ github.base_ref }}" > pr-info/base_ref
+        echo "${{ env.GIT_VERSION }}" > pr-info/version
+        echo "${{ env.JOB_START }}" > pr-info/job_start
+        echo "$(date +%s)" > pr-info/job_end
+        echo extended-build >> pr-info/artifacts
+        echo extended-devel-build >> pr-info/artifacts
+
+    - name: Upload PR info
+      if: github.event_name == 'pull_request'
+      uses: actions/upload-artifact@v4
+      with:
+        name: pr-info
+        path: pr-info/
 
     - name: Save Firmwares Cache
       if: steps.cache-firmwares.outputs.cache-hit != 'true'

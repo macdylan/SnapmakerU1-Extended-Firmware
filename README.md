@@ -66,8 +66,11 @@ If you find this project useful and would like to support its development:
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for information about contributing to this project.
 
+See [HEROES.md](HEROES.md) for contributors who made significant contributions to each release.
+
 ## License
 
-This project is free to use for personal usage. See [LICENSE](LICENSE) for details.
+The main project is licensed under the GNU General Public License v3.0
+(GPL-3.0). See [LICENSE](LICENSE) for details.
 
 For licensing information about individual tools and dependencies, see their respective directories.

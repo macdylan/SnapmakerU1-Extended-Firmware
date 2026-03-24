@@ -37,21 +37,9 @@ For developers who want to build custom firmware, see [Building from Source](dev
 
 Join the [Snapmaker Discord](https://discord.com/invite/snapmaker-official-1086575708903571536) and visit the **#u1-printer** channel to connect with other users using the custom firmware, share experiences, and get help.
 
-## Firmware Variants
+## Features
 
-### Basic Firmware
-
-Stock firmware with SSH access and minimal debugging features:
-
-- [SSH Access](ssh_access.md) - Remote shell access with `root/snapmaker` and `lava/snapmaker`
-- [Firmware Configuration](firmware_config.md) - Web-based system administration and firmware upgrades
-- [Data Persistence](data_persistence.md) - Persistent storage configuration across firmware updates
-- USB Ethernet Adapters - Hot-plug support with automatic DHCP configuration
-- Fluidd web interface with basic camera support
-
-### Extended Firmware
-
-Heavily expanded firmware with extensive features and customization. Includes all basic features plus:
+Heavily expanded firmware with extensive features and customization:
 
 **Web & Configuration:**
 
@@ -71,6 +59,7 @@ Heavily expanded firmware with extensive features and customization. Includes al
 - [Klipper Tweaks](tweaks.md) - Experimental [TMC driver optimizations](tweaks.md#tmc-autotune), [reduced current](tweaks.md#tmc-reduced-current), and [object processing for adaptive mesh](tweaks.md#object-processing-for-adaptive-mesh)
 - [AFC-Lite Stub](afc-lite.md) - Experimental AFC UI compatibility layer for Fluidd/Mainsail
 - [RFID Filament Tag Support](rfid_support.md) - NTAG213/215/216 support for OpenSpool format
+- [Alternative Filament Detection](rfid_support.md#alternative-detection-systems) - Alternative detection implementations with extended spool/tag support from Bambu, Creality, Anycubic, and others
 
 **Monitoring & Notifications:**
 
@@ -83,6 +72,8 @@ Heavily expanded firmware with extensive features and customization. Includes al
 - [Cloud Remote Access](cloud.md) - Cloud-based remote access service for 3D printers
 
 ## Support
+
+See [Heroes](https://github.com/paxx12/SnapmakerU1/blob/main/HEROES.md) for contributors who made significant contributions to each release.
 
 If you find this project useful and would like to support its development, you can:
 

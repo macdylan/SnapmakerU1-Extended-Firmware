@@ -4,12 +4,11 @@ title: RFID Filament Tag Support
 
 # RFID Filament Tag Support
 
-**Available in: All firmware (extended adds OpenSpool support)**
 
 The Snapmaker U1 automatically detects filament properties by reading RFID tags on spools.
 
 **Firmware Support:**
-- **Original & Basic:** Mifare Classic 1K with Snapmaker proprietary format
+- **Original:** Mifare Classic 1K with Snapmaker proprietary format
 - **Extended:** Adds NTAG215/216 support with OpenSpool format
 
 ## Supported Formats
@@ -126,6 +125,52 @@ Use the **NFC Tools** app (iOS/Android) to inspect tags:
 **Compatible tag types:** NTAG213/215/216, Mifare Classic 1K
 **Note:** ISO15693 tags (OpenPrintTag) are not supported
 
+## Alternative Detection Systems
+
+
+The OpenRFID detection system is an alternative to Snapmaker's built-in filament tag detection, based on the [OpenRFID](https://github.com/suchmememanyskill/OpenRFID) project. It adds support for tagged spools from multiple manufacturers.
+
+To enable it, navigate to the [firmware-config](firmware_config.md) web interface, go to **Snapmaker Components > RFID Detection System**, and select **OpenRFID** or **OpenRFID (force generic vendor)**.
+
+- **OpenRFID** - Filament is identified by brand and type. Spools unrecognized by Snapmaker Orca are hidden in Snapmaker Orca.
+- **OpenRFID (force generic vendor)** - Same as OpenRFID, but spools are labeled as Generic so they always appear in Snapmaker Orca.
+- **External** - Disables the built-in readers entirely, useful for external readers such as [wasikuss/snapmaker-u1-remote-rfid-reader](https://github.com/wasikuss/snapmaker-u1-remote-rfid-reader).
+
+### Supported Tags
+
+| System | Enabled by default | Remarks |
+|--------|-------------------|---------|
+| Bambu | No | Requires additional configuration (see below) |
+| Creality | No | Requires additional configuration (see below) |
+| Anycubic | Yes | - |
+| Snapmaker | Yes | - |
+| Elegoo | No | Elegoo spools tagged with RFID work unreliably |
+| [OpenSpool](https://openspool.io/) | Yes | - |
+| TigerTag | Yes | Fully offline implementation |
+
+### Bambu / Creality Spool Configuration
+
+Bambu and Creality tagged spools require authentication keys. Edit the user configuration file to enable them:
+
+```
+/oem/printer_data/config/extended/openrfid_user.cfg
+```
+
+For **Bambu** spools:
+```ini
+[bambu_lab_tag_processor]
+key = <your 32 hex character key>
+```
+
+For **Creality** spools:
+```ini
+[creality_tag_processor]
+key = <your 32 hex character key>
+encryption_key = <your 32 hex character key>
+```
+
+After editing, restart the printer.
+
 ## Troubleshooting
 
 **Tag not detected:**
@@ -141,5 +186,5 @@ Use the **NFC Tools** app (iOS/Android) to inspect tags:
 - Use NTAG tags with OpenSpool format instead
 
 **NTAG tags only work on extended firmware:**
-- Basic and original firmware only support Mifare Classic 1K with Snapmaker proprietary format
+- Original firmware only supports Mifare Classic 1K with Snapmaker proprietary format
 - Extended firmware adds NTAG215/216 support

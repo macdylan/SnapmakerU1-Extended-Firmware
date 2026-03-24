@@ -22,52 +22,13 @@ Patch set in `overlays/firmware-extended/13-rfid-support/patches`:
 - `05-add-filament-detect-set-endpoint.patch`
   - Adds webhook endpoint `filament_detect/set`.
 
-## Internal API Contract
+## API Contract
 
-### Webhook: `filament_detect/set`
+See [docs/design/filament_detect.md](../../../docs/design/filament_detect.md) for the full field
+reference, endpoint contract, and OpenSpool mapping.
 
-- Required request fields:
-  - `channel` (int)
-  - `info` (dict)
-- `info` keys:
-  - `vendor` (string), `type` (string), `subtype` (string)
-  - `color` (`RRGGBB` hex string), `alpha` (`AA` hex string)
-  - `min_temp` (int), `max_temp` (int), `bed_temp` (int)
-  - `card_uid` (hex string with even number of digits)
-- Only these lower-case names are accepted for webhook `info`.
-- Type policy:
-  - Values are parsed with Python conversions (`int(...)`, `bytes.fromhex(...)`).
-  - `ARGB_COLOR` is recalculated from `alpha` and `color`.
-  - Unknown keys are rejected as `unsupported fields: ...`.
-- Behavior:
-  - Builds an updated filament info object from defaults plus provided keys.
-  - Sets state to idle and calls `_filament_info_update(channel, info, True)`.
-  - Returns `{'state': 'success'}` or `{'state': 'error', 'message': ...}`.
-
-Example request body:
-```json
-{
-  "channel": 0,
-  "info": {
-    "vendor": "Generic",
-    "type": "PLA",
-    "subtype": "Basic",
-    "color": "FFAA33",
-    "alpha": "CC",
-    "min_temp": 200,
-    "max_temp": 230,
-    "bed_temp": 60,
-    "card_uid": "A1B2C3D4"
-  }
-}
-```
-
-### Client Observability Contract
-
-- Clients should read `filament_detect` status via:
-  - `/printer/objects/query?filament_detect`
-- `filament_detect.state` is the source of truth for RFID update lifecycle.
-- If `state[channel] == 1`, the printer is requesting an update for that channel.
+`filament_detect.state[channel] == 1` signals that the printer is requesting an update for that
+channel. Clients read state via `/printer/objects/query?filament_detect`.
 
 ## Compatibility Notes
 

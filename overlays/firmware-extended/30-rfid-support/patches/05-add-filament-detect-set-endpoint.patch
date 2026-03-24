@@ -24,44 +24,44 @@
 +                raise web_request.error("channel[%d] is out of range[0, %d]"
 +                                        % (channel, self._channel_nums - 1))
 +
-+            params = web_request.get_dict('info')
++            params = web_request.get_dict('info', {})
++            has_params = len(params) > 0
 +            filament_info = copy.deepcopy(filament_protocol.FILAMENT_INFO_STRUCT)
 +
-+            if 'vendor' in params:
-+                filament_info['VENDOR'] = str(params.pop('vendor'))
-+            if 'type' in params:
-+                filament_info['MAIN_TYPE'] = str(params.pop('type'))
-+            if 'subtype' in params:
-+                filament_info['SUB_TYPE'] = str(params.pop('subtype'))
++            if 'VENDOR' in params:
++                filament_info['VENDOR'] = str(params.pop('VENDOR'))
++            if 'MAIN_TYPE' in params:
++                filament_info['MAIN_TYPE'] = str(params.pop('MAIN_TYPE'))
++            if 'SUB_TYPE' in params:
++                filament_info['SUB_TYPE'] = str(params.pop('SUB_TYPE'))
 +
-+            if 'min_temp' in params:
-+                filament_info['HOTEND_MIN_TEMP'] = int(params.pop('min_temp'))
-+            if 'max_temp' in params:
-+                filament_info['HOTEND_MAX_TEMP'] = int(params.pop('max_temp'))
-+            if 'bed_temp' in params:
-+                filament_info['BED_TEMP'] = int(params.pop('bed_temp'))
++            if 'HOTEND_MIN_TEMP' in params:
++                filament_info['HOTEND_MIN_TEMP'] = int(params.pop('HOTEND_MIN_TEMP'))
++            if 'HOTEND_MAX_TEMP' in params:
++                filament_info['HOTEND_MAX_TEMP'] = int(params.pop('HOTEND_MAX_TEMP'))
++            if 'BED_TEMP' in params:
++                filament_info['BED_TEMP'] = int(params.pop('BED_TEMP'))
 +
-+            if 'alpha' in params:
-+                alpha = str(params.pop('alpha')).strip()
-+                filament_info['ALPHA'] = int(alpha, 16) & 0xFF
-+            if 'color' in params:
-+                color = str(params.pop('color')).strip()
-+                filament_info['RGB_1'] = int(color, 16) & 0xFFFFFF
++            if 'ALPHA' in params:
++                filament_info['ALPHA'] = int(params.pop('ALPHA')) & 0xFF
++            if 'RGB_1' in params:
++                filament_info['RGB_1'] = int(params.pop('RGB_1')) & 0xFFFFFF
 +            filament_info['ARGB_COLOR'] = filament_info['ALPHA'] << 24 | filament_info['RGB_1']
 +
-+            if 'card_uid' in params:
-+                filament_info['CARD_UID'] = list(bytes.fromhex(str(params.pop('card_uid'))))
-+            if 'sku' in params:
-+                filament_info['sku'] = int(params.pop('sku'))
-+            elif len(params) > 0:
-+                filament_info['sku'] = rand()
++            if 'CARD_UID' in params:
++                filament_info['CARD_UID'] = [int(b) for b in params.pop('CARD_UID')]
++            if 'SKU' in params:
++                filament_info['SKU'] = int(params.pop('SKU'))
 +
 +            if params:
 +                raise web_request.error("unsupported fields: %s" % (', '.join(sorted(params.keys()))))
 +
-+            info['OFFICIAL'] = len(params) > 0
++            filament_info['OFFICIAL'] = has_params
 +            self._state[channel] = FILAMENT_DT_STATE_IDLE
-+            self._filament_info_update(channel, filament_info, True)
++
++            ptc = self.printer.lookup_object('print_task_config', None)
++            if has_params or ptc is not None and ptc.print_task_config['filament_official'][channel]:
++                self._filament_info_update(channel, filament_info, True)
 +            web_request.send({'state': 'success'})
 +        except Exception as e:
 +            logging.error("[filament_detect] set: %s", str(e))
